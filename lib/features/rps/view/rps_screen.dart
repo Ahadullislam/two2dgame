@@ -1,50 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../rps/cubit/rps_cubit.dart';
 
 const neonBlue = Color(0xFF00F0FF);
 const neonPink = Color(0xFFFF00E0);
 const neonGreen = Color(0xFF39FF14);
 const neonPurple = Color(0xFF9D00FF);
 
-class RPSScreen extends StatefulWidget {
-  const RPSScreen({Key? key}) : super(key: key);
+class RPSScreen extends StatelessWidget {
+  const RPSScreen({super.key});
 
-  @override
-  State<RPSScreen> createState() => _RPSScreenState();
-}
-
-class _RPSScreenState extends State<RPSScreen> {
-  String? _playerChoice;
-  String? _aiChoice;
-  String? _result;
-
-  static const choices = ['Rock', 'Paper', 'Scissors'];
   static const icons = [Icons.pan_tool, Icons.description, Icons.content_cut];
   static const colors = [neonBlue, neonPink, neonGreen];
-
-  void _play(int idx) {
-    final aiIdx = (DateTime.now().millisecondsSinceEpoch % 3);
-    setState(() {
-      _playerChoice = choices[idx];
-      _aiChoice = choices[aiIdx];
-      _result = _determineResult(idx, aiIdx);
-    });
-  }
-
-  String _determineResult(int player, int ai) {
-    if (player == ai) return 'Draw!';
-    if ((player == 0 && ai == 2) || (player == 1 && ai == 0) || (player == 2 && ai == 1)) {
-      return 'You Win!';
-    }
-    return 'AI Wins!';
-  }
-
-  void _reset() {
-    setState(() {
-      _playerChoice = null;
-      _aiChoice = null;
-      _result = null;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,84 +25,87 @@ class _RPSScreenState extends State<RPSScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Reset',
-            onPressed: _reset,
+            onPressed: () => context.read<RpsCubit>().reset(),
             color: neonGreen,
           ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Choose your move:',
-            style: TextStyle(
-              color: neonPink,
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-              letterSpacing: 1.2,
-              shadows: [Shadow(blurRadius: 8, color: neonPink)],
-            ),
-          ),
-          const SizedBox(height: 28),
-          Row(
+      body: BlocBuilder<RpsCubit, RpsState>(
+        builder: (context, state) {
+          return Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (i) => _ChoiceButton(
-              icon: icons[i],
-              label: choices[i],
-              color: colors[i],
-              selected: _playerChoice == choices[i],
-              onTap: () => _play(i),
-            )),
-          ),
-          const SizedBox(height: 40),
-          if (_playerChoice != null && _aiChoice != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // User's choice icon
-                  AnimatedScale(
-                    scale: 1.25,
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.elasticOut,
-                    child: _ChoiceDisplay(
-                      icon: icons[choices.indexOf(_playerChoice!)],
-                      label: _playerChoice!,
-                      color: colors[choices.indexOf(_playerChoice!)],
-                      isUser: true,
-                    ),
-                  ),
-                  const SizedBox(width: 22),
-                  // Animated result text
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                    child: Text(
-                      _result ?? '',
-                      key: ValueKey(_result),
-                      style: TextStyle(
-                        color: _result == 'You Win!' ? neonGreen : (_result == 'Draw!' ? neonBlue : neonPink),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 26,
-                        letterSpacing: 2.0,
-                        shadows: [Shadow(blurRadius: 14, color: neonGreen)],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 22),
-                  // AI's choice icon
-                  _ChoiceDisplay(
-                    icon: icons[choices.indexOf(_aiChoice!)],
-                    label: _aiChoice!,
-                    color: colors[choices.indexOf(_aiChoice!)],
-                    isUser: false,
-                  ),
-                ],
+            children: [
+              Text(
+                'Choose your move:',
+                style: TextStyle(
+                  color: neonPink,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  letterSpacing: 1.2,
+                  shadows: [Shadow(blurRadius: 8, color: neonPink)],
+                ),
               ),
-            ),
-        ],
+              const SizedBox(height: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (i) => _ChoiceButton(
+                      icon: icons[i],
+                      label: RpsCubit.choices[i],
+                      color: colors[i],
+                      selected: state.playerChoice == RpsCubit.choices[i],
+                      onTap: () => context.read<RpsCubit>().play(i),
+                    )),
+              ),
+              const SizedBox(height: 40),
+              if (state.playerChoice != null && state.aiChoice != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      AnimatedScale(
+                        scale: 1.25,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.elasticOut,
+                        child: _ChoiceDisplay(
+                          icon: icons[RpsCubit.choices.indexOf(state.playerChoice!)],
+                          label: state.playerChoice!,
+                          color: colors[RpsCubit.choices.indexOf(state.playerChoice!)],
+                          isUser: true,
+                        ),
+                      ),
+                      const SizedBox(width: 22),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                        child: Text(
+                          state.result ?? '',
+                          key: ValueKey(state.result),
+                          style: TextStyle(
+                            color: state.result == 'You Win!'
+                                ? neonGreen
+                                : (state.result == 'Draw!' ? neonBlue : neonPink),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 26,
+                            letterSpacing: 2.0,
+                            shadows: [Shadow(blurRadius: 14, color: neonGreen)],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 22),
+                      _ChoiceDisplay(
+                        icon: icons[RpsCubit.choices.indexOf(state.aiChoice!)],
+                        label: state.aiChoice!,
+                        color: colors[RpsCubit.choices.indexOf(state.aiChoice!)],
+                        isUser: false,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

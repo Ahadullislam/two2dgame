@@ -9,7 +9,7 @@ class AnimatedParticlesBackground extends StatefulWidget {
   final double maxSize;
   final Duration duration;
   const AnimatedParticlesBackground({
-    Key? key,
+    super.key,
     this.particleCount = 40,
     this.colors = const [
       Color(0xFF00F0FF),
@@ -20,7 +20,7 @@ class AnimatedParticlesBackground extends StatefulWidget {
     this.minSize = 4,
     this.maxSize = 16,
     this.duration = const Duration(seconds: 18),
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedParticlesBackground> createState() => _AnimatedParticlesBackgroundState();

@@ -8,16 +8,16 @@ const neonGreen = Color(0xFF39FF14);
 const neonPurple = Color(0xFF9D00FF);
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF181A20),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Animated particles background
           const AnimatedParticlesBackground(),
           Center(
             child: Column(
@@ -71,6 +71,24 @@ class HomeScreen extends StatelessWidget {
                       onTap: () {
                         SoundPlayer.play('tap.mp3');
                         Navigator.pushNamed(context, '/rps');
+                      },
+                    ),
+                    _GameCard(
+                      title: 'Word Scramble',
+                      icon: Icons.spellcheck,
+                      color: neonBlue,
+                      onTap: () {
+                        SoundPlayer.play('tap.mp3');
+                        Navigator.pushNamed(context, '/wordscramble');
+                      },
+                    ),
+                    _GameCard(
+                      title: 'Memory Match',
+                      icon: Icons.grid_view,
+                      color: neonPurple,
+                      onTap: () {
+                        SoundPlayer.play('tap.mp3');
+                        Navigator.pushNamed(context, '/memory');
                       },
                     ),
                     _GameCard(

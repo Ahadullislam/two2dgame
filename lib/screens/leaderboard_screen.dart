@@ -7,7 +7,7 @@ const neonGreen = Color(0xFF39FF14);
 const neonPurple = Color(0xFF9D00FF);
 
 class LeaderboardScreen extends StatelessWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

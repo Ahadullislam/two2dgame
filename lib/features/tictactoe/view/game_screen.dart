@@ -1,95 +1,14 @@
 import 'package:flutter/material.dart';
-// Neon color constants
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../tictactoe/cubit/game_cubit.dart';
+
 const neonBlue = Color(0xFF00F0FF);
 const neonPink = Color(0xFFFF00E0);
 const neonGreen = Color(0xFF39FF14);
 const neonPurple = Color(0xFF9D00FF);
 
-enum GameMode { pvp, pvc }
-enum Player { x, o }
-enum GameResult { ongoing, draw, xWin, oWin }
-
-class GameScreen extends StatefulWidget {
-  const GameScreen({Key? key}) : super(key: key);
-
-  @override
-  State<GameScreen> createState() => _GameScreenState();
-}
-
-class _GameScreenState extends State<GameScreen> {
-  GameMode _mode = GameMode.pvp;
-  List<String> _board = List.filled(9, '');
-  Player _currentPlayer = Player.x;
-  bool _gameOver = false;
-  GameResult _result = GameResult.ongoing;
-  List<int>? _winLine;
-
-  void _resetGame([GameMode? mode]) {
-    setState(() {
-      _mode = mode ?? _mode;
-      _board = List.filled(9, '');
-      _currentPlayer = Player.x;
-      _gameOver = false;
-      _result = GameResult.ongoing;
-      _winLine = null;
-    });
-  }
-
-  void _onCellTap(int idx) async {
-    if (_board[idx].isNotEmpty || _gameOver) return;
-    setState(() {
-      _board[idx] = _currentPlayer == Player.x ? 'X' : 'O';
-      _checkGameOver();
-      if (!_gameOver) {
-        _currentPlayer = _currentPlayer == Player.x ? Player.o : Player.x;
-      }
-    });
-    if (_mode == GameMode.pvc && !_gameOver && _currentPlayer == Player.o) {
-      await Future.delayed(const Duration(milliseconds: 350));
-      final aiMove = _getRandomMove();
-      if (aiMove != -1) {
-        setState(() {
-          _board[aiMove] = 'O';
-          _checkGameOver();
-          if (!_gameOver) _currentPlayer = Player.x;
-        });
-      }
-    }
-  }
-
-  void _checkGameOver() {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],
-      [0, 4, 8], [2, 4, 6],
-    ];
-    for (final line in lines) {
-      final a = _board[line[0]];
-      final b = _board[line[1]];
-      final c = _board[line[2]];
-      if (a.isNotEmpty && a == b && b == c) {
-        _gameOver = true;
-        _result = a == 'X' ? GameResult.xWin : GameResult.oWin;
-        _winLine = line;
-        return;
-      }
-    }
-    if (!_board.contains('')) {
-      _gameOver = true;
-      _result = GameResult.draw;
-    }
-  }
-
-  int _getRandomMove() {
-    final empty = <int>[];
-    for (int i = 0; i < 9; i++) {
-      if (_board[i].isEmpty) empty.add(i);
-    }
-    if (empty.isEmpty) return -1;
-    return empty[DateTime.now().millisecondsSinceEpoch % empty.length];
-  }
-
-  void _onModeChanged(GameMode mode) => _resetGame(mode);
+class GameScreen extends StatelessWidget {
+  const GameScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -104,79 +23,84 @@ class _GameScreenState extends State<GameScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'New Game',
-            onPressed: _resetGame,
+            onPressed: () => context.read<GameCubit>().reset(),
             color: neonGreen,
           ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          const SizedBox(height: 18),
-          _ModeSelector(mode: _mode, onChanged: _onModeChanged),
-          const SizedBox(height: 18),
-          Text(
-            _gameOver
-                ? (_result == GameResult.xWin
-                    ? 'X Wins!'
-                    : _result == GameResult.oWin
-                        ? 'O Wins!'
-                        : 'Draw!')
-                : (_currentPlayer == Player.x ? "X's Turn" : "O's Turn"),
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontSize: 28,
-              color: _gameOver
-                  ? (_result == GameResult.xWin
-                      ? neonBlue
-                      : _result == GameResult.oWin
-                          ? neonPink
-                          : neonGreen)
-                  : (_currentPlayer == Player.x
-                      ? neonBlue
-                      : neonPink),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              child: _GameBoard(
-                board: _board,
-                onCellTap: _onCellTap,
-                gameOver: _gameOver,
-                winLine: _winLine,
+      body: BlocBuilder<GameCubit, GameState>(
+        builder: (context, state) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(height: 18),
+              _ModeSelector(
+                mode: state.mode,
+                onChanged: (m) => context.read<GameCubit>().reset(m),
               ),
-            ),
-          ),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: _gameOver
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: 32),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: neonGreen.withOpacity(0.22),
-                        foregroundColor: neonGreen,
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+              const SizedBox(height: 18),
+              Text(
+                state.gameOver
+                    ? (state.result == GameResult.xWin
+                        ? 'X Wins!'
+                        : state.result == GameResult.oWin
+                            ? 'O Wins!'
+                            : 'Draw!')
+                    : (state.currentPlayer == Player.x ? "X's Turn" : "O's Turn"),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontSize: 28,
+                  color: state.gameOver
+                      ? (state.result == GameResult.xWin
+                          ? neonBlue
+                          : state.result == GameResult.oWin
+                              ? neonPink
+                              : neonGreen)
+                      : (state.currentPlayer == Player.x ? neonBlue : neonPink),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Center(
+                  child: _GameBoard(
+                    board: state.board,
+                    onCellTap: (i) => context.read<GameCubit>().onCellTap(i),
+                    gameOver: state.gameOver,
+                    winLine: state.winLine,
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: state.gameOver
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: neonGreen.withOpacity(0.22),
+                            foregroundColor: neonGreen,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            shadowColor: neonGreen,
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          onPressed: () => context.read<GameCubit>().reset(),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+                            child: Text('New Game'),
+                          ),
                         ),
-                        shadowColor: neonGreen,
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      onPressed: _resetGame,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 10),
-                        child: Text('New Game'),
-                      ),
-                    ),
-                  )
-                : const SizedBox(height: 64),
-          ),
-        ],
+                      )
+                    : const SizedBox(height: 64),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -185,7 +109,7 @@ class _GameScreenState extends State<GameScreen> {
 class _ModeSelector extends StatelessWidget {
   final GameMode mode;
   final ValueChanged<GameMode> onChanged;
-  const _ModeSelector({Key? key, required this.mode, required this.onChanged}) : super(key: key);
+  const _ModeSelector({required this.mode, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -291,12 +215,11 @@ class _GameBoard extends StatelessWidget {
   final List<int>? winLine;
 
   const _GameBoard({
-    Key? key,
     required this.board,
     required this.onCellTap,
     required this.gameOver,
     this.winLine,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +304,7 @@ class _GameBoard extends StatelessWidget {
 
 class _NeonSymbol extends StatelessWidget {
   final String symbol;
-  const _NeonSymbol({Key? key, required this.symbol}) : super(key: key);
+  const _NeonSymbol({super.key, required this.symbol});
 
   @override
   Widget build(BuildContext context) {
@@ -393,9 +316,8 @@ class _NeonSymbol extends StatelessWidget {
         fontSize: 56,
         color: color,
         letterSpacing: 2.0,
-        shadows: [
-          Shadow(blurRadius: 32, color: color, offset: Offset(0, 0)),
-          Shadow(blurRadius: 8, color: color.withOpacity(0.6), offset: Offset(0, 0)),
+        shadows: const [
+          Shadow(blurRadius: 32, color: Colors.white24, offset: Offset(0, 0)),
         ],
       ),
     );

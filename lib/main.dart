@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/game_screen.dart';
-import 'screens/rps_screen.dart';
 import 'screens/leaderboard_screen.dart';
+import 'features/tictactoe/view/game_screen.dart' as ttt;
+import 'features/rps/view/rps_screen.dart' as rps;
+import 'features/memory/view/memory_screen.dart' as memory;
+import 'features/tictactoe/cubit/game_cubit.dart';
+import 'features/rps/cubit/rps_cubit.dart';
+import 'features/memory/cubit/memory_cubit.dart';
+import 'features/wordscramble/view/word_screen.dart' as ws;
+import 'features/wordscramble/cubit/word_cubit.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,8 +29,22 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       home: const HomeScreen(),
       routes: {
-        '/tictactoe': (context) => const GameScreen(),
-        '/rps': (context) => const RPSScreen(),
+        '/tictactoe': (context) => BlocProvider(
+              create: (_) => GameCubit(),
+              child: const ttt.GameScreen(),
+            ),
+        '/rps': (context) => BlocProvider(
+              create: (_) => RpsCubit(),
+              child: const rps.RPSScreen(),
+            ),
+        '/memory': (context) => BlocProvider(
+              create: (_) => MemoryCubit(),
+              child: const memory.MemoryScreen(),
+            ),
+        '/wordscramble': (context) => BlocProvider(
+              create: (_) => WordCubit(),
+              child: const ws.WordScreen(),
+            ),
         '/leaderboard': (context) => const LeaderboardScreen(),
       },
     );
