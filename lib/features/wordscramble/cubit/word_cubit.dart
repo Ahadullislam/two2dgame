@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../models/leaderboard.dart';
 import 'dart:math';
 
 class WordState extends Equatable {
@@ -33,7 +34,10 @@ class WordState extends Equatable {
 }
 
 class WordCubit extends Cubit<WordState> {
-  WordCubit() : super(_first());
+  DateTime? _startAt;
+  WordCubit() : super(_first()) {
+    _startAt = DateTime.now();
+  }
 
   static const _words = [
     'apple', 'river', 'chair', 'phone', 'light', 'music', 'plane', 'green', 'smile', 'storm',
@@ -79,6 +83,13 @@ class WordCubit extends Cubit<WordState> {
   void submit() {
     final ok = state.input.trim().toLowerCase() == state.original.toLowerCase();
     emit(state.copyWith(correct: ok));
+    if (ok) {
+      LeaderboardModel().recordResult('Word Scramble', win: true);
+      if (_startAt != null) {
+        final seconds = DateTime.now().difference(_startAt!).inSeconds;
+        LeaderboardModel().recordTime('Word Scramble', seconds);
+      }
+    }
   }
 
   void next() {
@@ -86,6 +97,7 @@ class WordCubit extends Cubit<WordState> {
     final nextIdx = (state.index + 1) % pool.length;
     final word = pool[nextIdx];
     emit(WordState.initial(word, _scramble(word), nextIdx));
+    _startAt = DateTime.now();
   }
 
   void skip() => next();

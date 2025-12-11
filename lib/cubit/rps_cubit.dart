@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../models/leaderboard.dart';
 
 class RpsState extends Equatable {
   final String? playerChoice;
@@ -29,11 +30,19 @@ class RpsCubit extends Cubit<RpsState> {
 
   void play(int idx) {
     final aiIdx = DateTime.now().millisecondsSinceEpoch % 3;
+    final res = _determineResult(idx, aiIdx);
     emit(RpsState(
       playerChoice: choices[idx],
       aiChoice: choices[aiIdx],
-      result: _determineResult(idx, aiIdx),
+      result: res,
     ));
+    if (res == 'Draw!') {
+      LeaderboardModel().recordResult('Rock–Paper–Scissors', draw: true);
+    } else if (res == 'You Win!') {
+      LeaderboardModel().recordResult('Rock–Paper–Scissors', win: true);
+    } else if (res == 'AI Wins!') {
+      LeaderboardModel().recordResult('Rock–Paper–Scissors');
+    }
   }
 
   String _determineResult(int player, int ai) {

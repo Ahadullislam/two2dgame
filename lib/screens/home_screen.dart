@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/theme_cubit.dart';
 import '../widgets/animated_particles_background.dart';
 import '../utils/sound_player.dart';
 
@@ -15,16 +17,33 @@ class HomeScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('2D Game Hub'),
+        actions: [
+          IconButton(
+            tooltip: 'Toggle theme',
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            onPressed: () => context.read<ThemeCubit>().toggle(),
+          ),
+        ],
+      ),
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           const AnimatedParticlesBackground(),
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 60),
-                Text(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
                   'Mini Game Hub',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -102,12 +121,12 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 80),
+                const SizedBox(height: 40),
                 // Optional: Add more cards, leaderboard, profile, etc.
               ],
             ),
           ),
-        ],
+          )],
       ),
     );
   }

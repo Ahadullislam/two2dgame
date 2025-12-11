@@ -19,9 +19,9 @@ class AppTheme {
           error: Colors.redAccent,
           onError: Colors.white,
           surface: Colors.white,
-          onSurface: neonBlue,
+          onSurface: Colors.black87,
         ),
-        scaffoldBackgroundColor: const Color(0xFF181A20),
+        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,

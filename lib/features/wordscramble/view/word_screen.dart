@@ -12,6 +12,7 @@ class WordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -58,12 +59,12 @@ class WordScreen extends StatelessWidget {
                   onChanged: (v) => context.read<WordCubit>().updateInput(v),
                   decoration: InputDecoration(
                     hintText: 'Type your guess...',
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black45),
                     filled: true,
-                    fillColor: Colors.white12,
+                    fillColor: isDark ? Colors.white12 : Colors.black12,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   ),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -80,7 +81,10 @@ class WordScreen extends StatelessWidget {
                       onPressed: state.correct ? null : () => context.read<WordCubit>().skip(),
                       icon: const Icon(Icons.skip_next),
                       label: const Text('Skip'),
-                      style: OutlinedButton.styleFrom(foregroundColor: neonBlue, side: BorderSide(color: neonBlue)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: neonBlue,
+                        side: const BorderSide(color: neonBlue),
+                      ),
                     ),
                   ],
                 ),
@@ -111,7 +115,10 @@ class WordScreen extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.exit_to_app),
                         label: const Text('Exit'),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Colors.white38)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: isDark ? Colors.white70 : Colors.black87,
+                          side: BorderSide(color: isDark ? Colors.white38 : Colors.black38),
+                        ),
                       ),
                     ],
                   ),

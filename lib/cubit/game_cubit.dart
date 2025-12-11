@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../models/leaderboard.dart';
 
 enum GameMode { pvp, pvc }
 enum Player { x, o }
@@ -74,6 +75,16 @@ class GameCubit extends Cubit<GameState> {
         result: evaluated.result,
         winLine: evaluated.winLine,
       ));
+      // Record result for PVC mode only (player=X, AI=O)
+      if (state.mode == GameMode.pvc) {
+        if (evaluated.result == GameResult.draw) {
+          LeaderboardModel().recordResult('Tic-Tac-Toe', draw: true);
+        } else if (evaluated.result == GameResult.xWin) {
+          LeaderboardModel().recordResult('Tic-Tac-Toe', win: true);
+        } else if (evaluated.result == GameResult.oWin) {
+          LeaderboardModel().recordResult('Tic-Tac-Toe');
+        }
+      }
       return;
     }
 
@@ -94,6 +105,16 @@ class GameCubit extends Cubit<GameState> {
             result: aiEval.result,
             winLine: aiEval.winLine,
           ));
+          // Record result for PVC mode (AI just moved as O)
+          if (state.mode == GameMode.pvc) {
+            if (aiEval.result == GameResult.draw) {
+              LeaderboardModel().recordResult('Tic-Tac-Toe', draw: true);
+            } else if (aiEval.result == GameResult.xWin) {
+              LeaderboardModel().recordResult('Tic-Tac-Toe', win: true);
+            } else if (aiEval.result == GameResult.oWin) {
+              LeaderboardModel().recordResult('Tic-Tac-Toe');
+            }
+          }
         } else {
           emit(state.copyWith(
             board: aiBoard,

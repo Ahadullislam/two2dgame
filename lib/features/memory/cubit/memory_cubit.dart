@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../models/memory_card.dart';
+import '../../../models/leaderboard.dart';
 
 class MemoryState extends Equatable {
   final List<MemoryCard> deck;
@@ -104,6 +105,10 @@ class MemoryCubit extends Cubit<MemoryState> {
       final done = deck.every((c) => c.isMatched);
       if (done) {
         _timer?.cancel();
+        // Record Memory Match completion as a win
+        LeaderboardModel().recordResult('Memory Match', win: true);
+        // Record best time in seconds
+        LeaderboardModel().recordTime('Memory Match', state.seconds);
       }
       emit(state.copyWith(deck: deck, isBusy: false, completed: done));
     } else {

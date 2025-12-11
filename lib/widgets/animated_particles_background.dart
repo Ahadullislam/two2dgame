@@ -51,9 +51,12 @@ class _AnimatedParticlesBackgroundState extends State<AnimatedParticlesBackgroun
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return CustomPaint(
-          painter: _ParticlesPainter(_particles, _controller.value),
-          size: Size.infinite,
+        return SizedBox.expand(
+          child: CustomPaint(
+            painter: _ParticlesPainter(_particles, _controller.value),
+            isComplex: true,
+            willChange: true,
+          ),
         );
       },
     );
